@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
+import java.util.ArrayList;
 
 public class UserListPane extends JPanel implements UserStatusListener {
 
@@ -12,10 +12,10 @@ public class UserListPane extends JPanel implements UserStatusListener {
 
     public UserListPane(Client client) {
         this.client = client;
-        this.client.addUserStatusListener(this);
+        this.userListModel = client.getUserList();
 
-        userListModel = new DefaultListModel<>();
         userListUI = new JList<>(userListModel);
+        client.addUserStatusListener(this);
         setLayout(new BorderLayout());
         add(new JScrollPane(userListUI), BorderLayout.CENTER);
 
@@ -24,34 +24,29 @@ public class UserListPane extends JPanel implements UserStatusListener {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() > 1){
                     String login = userListUI.getSelectedValue();
-                    MsgPane msgpane = new MsgPane(client, login);
+                    if(!(login==null)){
+                        MsgPane msgpane = new MsgPane(client, login, new ArrayList<>());
 
-                    JFrame j = new JFrame("Msg "+login);
-                    j.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                    j.setSize(500,500);
-                    j.getContentPane().add(msgpane, BorderLayout.CENTER);
-                    j.setVisible(true);
+                        JFrame j = new JFrame("msg " + login);
+                        j.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                        j.setSize(500, 500);
+                        j.getContentPane().add(msgpane, BorderLayout.CENTER);
+                        j.setVisible(true);
+                        revalidate();
+                        repaint();
+                    }
                 }
             }
         });
+        setVisible(true);
     }
 
-  // public static void main(String[] args) {
-  //     Client client = new Client("localhost", 12345);
-  //     UserListPane userListPane = new UserListPane(client);
-
-  //     JFrame frame = new JFrame("User List");
-  //     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-  //     frame.setSize(400,600);
-
-  //     frame.getContentPane().add(userListPane, BorderLayout.CENTER);
-  //     frame.setVisible(true);
-
-  // }
 
     @Override
     public void online(String login) {
-        userListModel.addElement(login);
+        if (!userListModel.contains(login)) {
+            userListModel.addElement(login);
+        }
     }
 
     @Override

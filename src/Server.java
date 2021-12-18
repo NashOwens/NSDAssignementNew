@@ -1,10 +1,13 @@
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Server extends Thread{
+public class Server extends Thread {
 
     private final int serverPort;
     private ArrayList<ServerWorker> workerList = new ArrayList<>();
@@ -37,4 +40,5 @@ public class Server extends Thread{
     public void removeWorker(ServerWorker serverWorker) {
         workerList.remove(serverWorker);
     }
+
 }

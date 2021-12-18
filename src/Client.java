@@ -1,39 +1,57 @@
+import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class Client {
+public class Client extends JPanel {
     private final String hostName;
     private final int Port;
     private Socket socket;
     private OutputStream serverOut;
     private InputStream serverIn;
     private BufferedReader BufferedIn;
+    private String Username;
 
-    private  ArrayList<UserStatusListener> userStatusListeners = new ArrayList<>();
-    private  ArrayList<MessageListener> messageListeners = new ArrayList<>();
+    public JTextArea userLog = new JTextArea(20,25);
 
-    public Client(String hostName, int Port){
+    private ArrayList<UserStatusListener> userStatusListeners = new ArrayList<>();
+    private ArrayList<MessageListener> messageListeners = new ArrayList<>();
+
+    private DefaultListModel<String> userList = new DefaultListModel<>();
+    private DefaultListModel<String> TopicList = new DefaultListModel<>();
+    private DefaultListModel<String> TopicHistory = new DefaultListModel<>();
+
+    public Client(String hostName, int Port) {
         this.hostName = hostName;
         this.Port = Port;
-    }
-    public static void main(String[] args) {
-        Client client = new Client("localhost", 12345);
-        client.addUserStatusListener(new UserStatusListener() {
+
+        setSize(800,600);
+        add(userLog);
+        setVisible(true);
+
+        this.addUserStatusListener(new UserStatusListener() {
             @Override
             public void online(String login) {
-                System.out.println("Online "+ login);
-            }
+                userLog.append("\nOnline "+ login);
+                if (!userList.contains(login)){
+                    userList.addElement(login);
+                }
 
+            }
             @Override
             public void offline(String login) {
-                System.out.println("Offline "+login);
-            }
+                userLog.append("\nOffline "+login);
+                userList.removeElement(login);
+                }
         });
 
-        client.addMessageListener((fromLogin, msgBody) ->
-                System.out.println("you have a message from "+fromLogin + ": " + msgBody + "\n"));
+        this.addMessageListener((fromLogin, msgBody) ->
+                userLog.append("\nyou have a message from "+fromLogin+" at "+java.time.LocalDate.now()+
+                        java.time.LocalTime.now()));
 
+    }
+    public DefaultListModel<String> getUserList(){
+        return userList;
     }
 
     public void msg(String sendTo, String msgBody) throws IOException {
@@ -46,9 +64,10 @@ public class Client {
         serverOut.write(cmd.getBytes());
 
         String response = BufferedIn.readLine();
-        System.out.println("Response Msg: " + response);
+        userLog.append("\nResponse Msg from server: " + response);
 
-        if ("ok login".equalsIgnoreCase(response)){
+        if ("Ok login".equalsIgnoreCase(response)){
+            Username = user;
             startMessageReader();
             return true;
         } else {
@@ -56,8 +75,12 @@ public class Client {
         }
     }
 
+    public String getUsername(){
+        return Username;
+    }
+
     public void handleLogOff() throws IOException {
-        String cmd= "logoff";
+        String cmd= "logoff\n";
         serverOut.write(cmd.getBytes());
     }
 
@@ -78,15 +101,21 @@ public class Client {
                 String[] tokens = line.split(" ");
                 if (tokens.length > 0) {
                     String cmd = tokens[0];
-                    if("online".equalsIgnoreCase(cmd)){
+                    if("Online".equalsIgnoreCase(cmd)){
                         handleOnline(tokens);
-                    } else if("offline".equalsIgnoreCase(cmd)){
+                    } else if("Offline".equalsIgnoreCase(cmd)){
                         handleOffline(tokens);
                     } else if("msg".equalsIgnoreCase(cmd)){
                         String[] tokensMsg = line.split(" ",3);
                         handleMsg(tokensMsg);
                     } else if("logoff".equalsIgnoreCase(cmd)){
                         handleLogOff();
+                    } else if("getTopic".equalsIgnoreCase(cmd)){
+                        String[] tokensMsg = line.split(" ",2);
+                        setTopics(tokensMsg);
+                    } else if("getTopicHistory".equalsIgnoreCase(cmd)){
+                        String[] tokensMsg = line.split(" ", 3);
+                        setTopicHistory(tokensMsg);
                     }
                 }
             }
@@ -101,6 +130,24 @@ public class Client {
             }
         }
 
+    private void setTopicHistory(String[] tokensMsg) {
+        String post = tokensMsg[1] + ": "+tokensMsg[2];
+        TopicHistory.addElement(post);
+    }
+
+    public void GetTopicHistory(String topic) throws IOException {
+        String outMsg = "getTopicHistory "+topic+"\n";
+        serverOut.write(outMsg.getBytes());
+    }
+
+
+    private void setTopics(String[] tokens) {
+        String Topic = tokens[1];
+        if (!TopicList.contains(Topic)) {
+            TopicList.addElement(Topic);
+        }
+    }
+
     private void handleMsg(String[] tokensMsg) {
         String login = tokensMsg[1];
         String msgBody = tokensMsg[2];
@@ -111,9 +158,10 @@ public class Client {
     }
 
     private void handleOffline(String[] tokens) {
-        String login = tokens[1];
+        String logout = tokens[1];
         for (UserStatusListener listener : userStatusListeners){
-            listener.offline(login);
+            listener.offline(logout);
+            this.removeUserStatusListener(listener);
         }
     }
 
@@ -122,6 +170,15 @@ public class Client {
         for (UserStatusListener listener : userStatusListeners){
             listener.online(login);
         }
+    }
+
+    public void getTopics() throws IOException {
+        String cmd ="getTopic\n";
+        serverOut.write(cmd.getBytes());
+    }
+
+    public DefaultListModel<String> getTopicList() {
+        return TopicList;
     }
 
 
@@ -138,9 +195,7 @@ public class Client {
         return false;
     }
 
-    public void addUserStatusListener(UserStatusListener listener){
-        userStatusListeners.add(listener);
-    }
+    public void addUserStatusListener(UserStatusListener listener){ userStatusListeners.add(listener); }
     public void removeUserStatusListener(UserStatusListener listener){
         userStatusListeners.remove(listener);
     }
@@ -149,5 +204,12 @@ public class Client {
     }
     public void removeMessageStatusListener(MessageListener listener){
         messageListeners.remove(listener);
+    }
+
+    public DefaultListModel<String> getHistoryList() {
+        return TopicHistory;
+    }
+    public void clearHistoryList() {
+        TopicHistory.clear();
     }
 }
