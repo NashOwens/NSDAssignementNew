@@ -17,6 +17,7 @@ public class UserListPane extends JPanel implements UserStatusListener {
         userListUI = new JList<>(userListModel);
         client.addUserStatusListener(this);
         setLayout(new BorderLayout());
+        setSize(200,300);
         add(new JScrollPane(userListUI), BorderLayout.CENTER);
 
         userListUI.addMouseListener(new MouseAdapter() {

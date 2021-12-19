@@ -42,8 +42,8 @@ public class SQLdatabase {
             e.printStackTrace();
         }
     }
-    public void ArchiveMsg(String[] Data){
-        String query = "INSERT INTO MsgArchive (FromUser, ToUser, Msg) VALUES ('"+Data[0]+"','"+Data[1]+"','"+Data[2]+"');";
+    public void ArchiveMsg(String[] Data, String time){
+        String query = "INSERT INTO MsgArchive (FromUser, ToUser, Msg, Time) VALUES ('"+Data[0]+"','"+Data[1]+"','"+Data[2]+"','"+time+"');";
         try (Connection connection = DriverManager.getConnection(connectionURL);
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(query);
@@ -63,9 +63,8 @@ public class SQLdatabase {
             while (resultSet.next()){
                 if(resultSet.getString(2).equals(topic)){
                     String[] temp= new String[3];
-                    temp[0] = resultSet.getString(2);
-                    temp[1] = resultSet.getString(3);
-                    temp[2] = resultSet.getString(4);
+                    temp[0] = resultSet.getString(3);
+                    temp[1] = resultSet.getString(4);
                     TopicLog.add(temp);
                 }
             }

@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -16,9 +18,8 @@ public class TopicListPane extends JPanel {
 
         TopicListUI = new JList<>(topicListModel);
         setLayout(new BorderLayout());
+        setSize(200,300);
         add(new JScrollPane(TopicListUI), BorderLayout.CENTER);
-
-
 
         TopicListUI.addMouseListener(new MouseAdapter() {
             @Override
@@ -30,7 +31,6 @@ public class TopicListPane extends JPanel {
                         try {
                             client.GetTopicHistory(topic);
                             topicMsgPane = new TopicMsgPane(client, topic);
-                            client.clearHistoryList();
                         } catch (IOException exception) {
                             exception.printStackTrace();
                         }

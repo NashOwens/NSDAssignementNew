@@ -12,6 +12,8 @@ public class ServerWorker extends Thread {
     private final Server server;
     private OutputStream outputStream;
 
+    private static Clock clock = new Clock();
+
     public ServerWorker(Server server,Socket clientSocket) {
         this.server = server;
         this.clientSocket = clientSocket;
@@ -33,21 +35,27 @@ public class ServerWorker extends Thread {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] tokens = line.split(" ");
+
+
                 if (tokens.length > 0 && tokens != null) {
                     String cmd = tokens[0];
                     if ("logoff".equalsIgnoreCase(cmd)) {
-                        handleLogoff();
+                        handleLogoff(clock.tick());
                         break;
                     } else if ("login".equalsIgnoreCase(cmd)) {
                         handleLogin(outputStream, tokens);
                     } else if ("msg".equalsIgnoreCase(cmd)) {
                         String[] tokensMsg = line.split(" ", 3);
-                        handleMsg(tokensMsg);
+                        handleMsg(tokensMsg, clock.tick());
                     } else if("getTopic".equalsIgnoreCase(cmd)){
                         handleGetTopics();
                     } else if ("getTopicHistory".equalsIgnoreCase(cmd)){
                         handleTopicHistory(tokens[1]);
-                    } else {
+                    } else if("msgTopic".equalsIgnoreCase(cmd)){
+                        String[] tokensMsg = line.split(" ",4);
+                        handleTopicMsg(tokensMsg);
+                    }
+                    else {
                         String msg = "unknown " + cmd + "\n";
                         outputStream.write(msg.getBytes());
                     }
@@ -58,6 +66,7 @@ public class ServerWorker extends Thread {
             e.printStackTrace();
         }
     }
+
 
     private void handleGetTopics() throws IOException {
         SQLdatabase db = new SQLdatabase();
@@ -72,7 +81,7 @@ public class ServerWorker extends Thread {
         SQLdatabase db = new SQLdatabase();
         ArrayList<String[]> list = db.GetTopicLog(topic);
         for (String[] l : list){
-            String outMsg = "getTopicHistory "+l[1] +" "+l[2] + "\n";
+            String outMsg = "getTopicHistory "+l[0]+" "+l[1]+"\n";
             send(outMsg);
         }
     }
@@ -80,34 +89,51 @@ public class ServerWorker extends Thread {
 
 
     //format: "msg" "login" msg...
-    private void handleMsg(String[] tokens) throws IOException {
+    private void handleMsg(String[] tokens, String time) throws IOException {
 
         String sendTo = tokens[1];
         String bodyMsg = tokens[2];
-
-        String[] MsgA = new String[3];
-        MsgA[0] = login;
-        MsgA[1] = sendTo;
-        MsgA[2] = bodyMsg;
+        tokens[0] = login;
+        //String[] MsgA = new String[3];
+        //MsgA[0] = login;
+        //MsgA[1] = sendTo;
+        //MsgA[2] = bodyMsg;
 
         SQLdatabase db = new SQLdatabase();
+        db.ArchiveMsg(tokens, time);
         List<ServerWorker> workerList = server.getWorkerList();
         for (ServerWorker worker : workerList){
             if (sendTo.equalsIgnoreCase(worker.getLogin())) {
-                    db.ArchiveMsg(MsgA);
                     String outMsg = "msg " + login + " " + bodyMsg + "\n";
                     worker.send(outMsg);
             }
         }
     }
 
+    private void handleTopicMsg(String[] tokens) throws IOException {
+        String topic = tokens[1];
+        String fromLogin = tokens[2];
+        String bodyMsg = tokens[3];
+        String[] Data = new String[3];
+        Data[0] = topic;
+        Data[1] = fromLogin;
+        Data[2] = bodyMsg;
+        SQLdatabase db = new SQLdatabase();
+        db.ArchiveTopicMsg(Data);
+        List<ServerWorker> workerList = server.getWorkerList();
+        for (ServerWorker worker : workerList){
+            String outMsg = "msgTopic "+ fromLogin + " " + bodyMsg + "\n";
+            worker.send(outMsg);
+        }
+    }
 
-    private void handleLogoff() throws IOException {
+
+    private void handleLogoff(String time) throws IOException {
         server.removeWorker(this);
 
         List<ServerWorker> workerList = server.getWorkerList();
         // Send other online  users current status
-        String offlineMsg = "Offline "+login+"\n";
+        String offlineMsg = "Offline "+login+" "+time+"\n";
         for (ServerWorker worker : workerList){
             if (!login.equals(worker.getLogin())) {
                 worker.send(offlineMsg);
@@ -137,11 +163,11 @@ public class ServerWorker extends Thread {
                     //Send current user all other online logins
                     for (ServerWorker worker : workerList) {
                         if (!login.equals(worker.getLogin()) && worker.getLogin() != null) {
-                            String onlineMsg2 = "Online " + worker.getLogin() + "\n";
+                            String onlineMsg2 = "Online "+worker.getLogin()+"\n";
                             send(onlineMsg2);
                         }
                         // Send other online users current status
-                        String onlineMsg = "Online " + login + "\n";
+                        String onlineMsg = "Online "+login+"\n";
                         if (!login.equals(worker.getLogin())) {
                             worker.send(onlineMsg);
                         }

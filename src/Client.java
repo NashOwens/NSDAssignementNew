@@ -16,16 +16,20 @@ public class Client extends JPanel {
 
     private ArrayList<UserStatusListener> userStatusListeners = new ArrayList<>();
     private ArrayList<MessageListener> messageListeners = new ArrayList<>();
+    private ArrayList<TopicMessageListener> topicListener = new ArrayList<>();
 
     private DefaultListModel<String> userList = new DefaultListModel<>();
     private DefaultListModel<String> TopicList = new DefaultListModel<>();
     private DefaultListModel<String> TopicHistory = new DefaultListModel<>();
+
+    private static Clock clock = new Clock();
 
     public Client(String hostName, int Port) {
         this.hostName = hostName;
         this.Port = Port;
 
         setSize(800,600);
+        userLog.setSize(200,300);
         add(userLog);
         setVisible(true);
 
@@ -116,6 +120,9 @@ public class Client extends JPanel {
                     } else if("getTopicHistory".equalsIgnoreCase(cmd)){
                         String[] tokensMsg = line.split(" ", 3);
                         setTopicHistory(tokensMsg);
+                    } else if("msgTopic".equalsIgnoreCase(cmd)){
+                        String[] tokensMsg = line.split(" ",3);
+                        handleTopicMsg(tokensMsg);
                     }
                 }
             }
@@ -129,6 +136,22 @@ public class Client extends JPanel {
                 }
             }
         }
+
+    private void handleTopicMsg(String[] tokensMsg) {
+        String login = tokensMsg[1];
+        String msgBody = tokensMsg[2];
+
+        for (TopicMessageListener listener : topicListener){
+            if(!(Username.equals(login))) {
+                listener.OnMessage(login, msgBody);
+            }
+        }
+    }
+
+    public void SendTopicMsg(String[] tokensMsg) throws IOException {
+        String outMsg = "msgTopic "+tokensMsg[0] +" "+tokensMsg[1]+" "+tokensMsg[2]+"\n";
+        serverOut.write(outMsg.getBytes());
+    }
 
     private void setTopicHistory(String[] tokensMsg) {
         String post = tokensMsg[1] + ": "+tokensMsg[2];
@@ -205,6 +228,8 @@ public class Client extends JPanel {
     public void removeMessageStatusListener(MessageListener listener){
         messageListeners.remove(listener);
     }
+    public void addTopicMessageListener(TopicMessageListener listener) { topicListener.add(listener); }
+    public void removeTopicMessageListener(TopicMessageListener listener) { topicListener.remove(listener); }
 
     public DefaultListModel<String> getHistoryList() {
         return TopicHistory;

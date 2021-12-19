@@ -34,11 +34,11 @@ public class MsgPane extends JPanel implements MessageListener {
             public void actionPerformed(ActionEvent e) {
                 try {
                     String text = input.getText();
-                    client.msg(Topic, text);
-                    listModel.addElement("You: "+text);
+                    if (!(text.equals(""))){
+                        client.msg(Topic, text);
+                        listModel.addElement("You: "+text);
+                    }
                     input.setText("");
-                    revalidate();
-                    repaint();
                 } catch (IOException exception) {
                     exception.printStackTrace();
                 }

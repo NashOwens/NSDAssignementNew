@@ -10,7 +10,7 @@ public class LoginGUI extends JFrame {
     JButton loginButton = new JButton("Login");
     JButton EXIT = new JButton("Exit");
 
-    public LoginGUI() throws IOException {
+    public LoginGUI() {
         super ("Login");
 
         this.client = new Client("localhost", 12345);
