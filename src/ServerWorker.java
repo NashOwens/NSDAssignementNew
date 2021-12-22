@@ -53,7 +53,7 @@ public class ServerWorker extends Thread {
                         handleTopicHistory(tokens[1]);
                     } else if("msgTopic".equalsIgnoreCase(cmd)){
                         String[] tokensMsg = line.split(" ",4);
-                        handleTopicMsg(tokensMsg);
+                        handleTopicMsg(tokensMsg, clock.tick());
                     }
                     else {
                         String msg = "unknown " + cmd + "\n";
@@ -81,7 +81,7 @@ public class ServerWorker extends Thread {
         SQLdatabase db = new SQLdatabase();
         ArrayList<String[]> list = db.GetTopicLog(topic);
         for (String[] l : list){
-            String outMsg = "getTopicHistory "+l[0]+" "+l[1]+"\n";
+            String outMsg = "getTopicHistory "+l[0]+" "+l[1]+" "+l[2]+"\n";
             send(outMsg);
         }
     }
@@ -94,23 +94,19 @@ public class ServerWorker extends Thread {
         String sendTo = tokens[1];
         String bodyMsg = tokens[2];
         tokens[0] = login;
-        //String[] MsgA = new String[3];
-        //MsgA[0] = login;
-        //MsgA[1] = sendTo;
-        //MsgA[2] = bodyMsg;
 
         SQLdatabase db = new SQLdatabase();
         db.ArchiveMsg(tokens, time);
         List<ServerWorker> workerList = server.getWorkerList();
         for (ServerWorker worker : workerList){
             if (sendTo.equalsIgnoreCase(worker.getLogin())) {
-                    String outMsg = "msg " + login + " " + bodyMsg + "\n";
+                    String outMsg = "msg " + login + " " + time + " " + bodyMsg + "\n";
                     worker.send(outMsg);
             }
         }
     }
 
-    private void handleTopicMsg(String[] tokens) throws IOException {
+    private void handleTopicMsg(String[] tokens, String time) throws IOException {
         String topic = tokens[1];
         String fromLogin = tokens[2];
         String bodyMsg = tokens[3];
@@ -119,10 +115,10 @@ public class ServerWorker extends Thread {
         Data[1] = fromLogin;
         Data[2] = bodyMsg;
         SQLdatabase db = new SQLdatabase();
-        db.ArchiveTopicMsg(Data);
+        db.ArchiveTopicMsg(Data, time);
         List<ServerWorker> workerList = server.getWorkerList();
         for (ServerWorker worker : workerList){
-            String outMsg = "msgTopic "+ fromLogin + " " + bodyMsg + "\n";
+            String outMsg = "msgTopic "+ fromLogin + " " + time + " "+ bodyMsg + "\n";
             worker.send(outMsg);
         }
     }

@@ -9,6 +9,7 @@ public class UserListPane extends JPanel implements UserStatusListener {
     private final Client client;
     private JList<String> userListUI;
     private DefaultListModel<String> userListModel;
+    private JTextField Title = new JTextField("Online Users:");
 
     public UserListPane(Client client) {
         this.client = client;
@@ -18,7 +19,10 @@ public class UserListPane extends JPanel implements UserStatusListener {
         client.addUserStatusListener(this);
         setLayout(new BorderLayout());
         setSize(200,300);
+        Title.setEditable(false);
+        add(Title, BorderLayout.NORTH);
         add(new JScrollPane(userListUI), BorderLayout.CENTER);
+
 
         userListUI.addMouseListener(new MouseAdapter() {
             @Override

@@ -2,7 +2,7 @@ import java.sql.*;
 import java.util.ArrayList;
 
 public class SQLdatabase {
-    private final String fileName = "C:/sqlite/db/NSDServerDb.db";
+    private final String fileName = "NSDServerDb.db";
     private String connectionURL = "jdbc:sqlite:" + fileName;
 
     public ArrayList<String[]> GetUsers(){
@@ -33,8 +33,8 @@ public class SQLdatabase {
             e.printStackTrace();
         }
     }
-    public void ArchiveTopicMsg(String[] Data){
-        String query = "INSERT INTO TopicArchive (Topic, User, Msg) VALUES ('"+Data[0]+"','"+Data[1]+"','"+Data[2]+"');";
+    public void ArchiveTopicMsg(String[] Data, String time){
+        String query = "INSERT INTO TopicArchive (Topic, User, Time, Msg) VALUES ('"+Data[0]+"','"+Data[1]+"','"+time+"','"+Data[2]+"');";
         try (Connection connection = DriverManager.getConnection(connectionURL);
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(query);
@@ -65,6 +65,7 @@ public class SQLdatabase {
                     String[] temp= new String[3];
                     temp[0] = resultSet.getString(3);
                     temp[1] = resultSet.getString(4);
+                    temp[2] = resultSet.getString(5);
                     TopicLog.add(temp);
                 }
             }

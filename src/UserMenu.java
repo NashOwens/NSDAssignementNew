@@ -11,6 +11,7 @@ public class UserMenu extends JFrame {
     private final Client client;
     private JButton EXIT = new JButton("Exit");
     private JButton AddTopic = new JButton("add topic");
+    private JButton NewPost = new JButton("New Post");
 
     public UserMenu(Client client) throws IOException {
         super ("Client " +client.getUsername());
@@ -25,12 +26,24 @@ public class UserMenu extends JFrame {
         add(client, BorderLayout.CENTER);
         add(new UserListPane(client), BorderLayout.EAST);
         add(new TopicListPane(client), BorderLayout.WEST);
-        add(AddTopic, BorderLayout.NORTH);
+        add(AddTopic, BorderLayout.BEFORE_FIRST_LINE);
+        //add(NewPost);
         add(EXIT, BorderLayout.SOUTH);
+
+        NewPost.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFrame f = new JFrame();
+                f.setSize(400,300);
+                f.add(new Post(client), BorderLayout.CENTER);
+                f.setVisible(true);
+            }
+        });
+
         AddTopic.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new AddTopicPane();
+                new AddTopicPane(client);
             }
         });
         EXIT.addActionListener(new ActionListener() {

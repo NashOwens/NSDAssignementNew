@@ -8,7 +8,7 @@ public class TopicMsgPane extends JPanel implements TopicMessageListener {
     private final Client client;
     private final String login;
 
-    private DefaultListModel<String> History = new DefaultListModel<>();
+    private DefaultListModel<String> History;
     private JTextField input = new JTextField();
     private JButton EXIT = new JButton("EXIT");
 
@@ -17,6 +17,7 @@ public class TopicMsgPane extends JPanel implements TopicMessageListener {
         this.login = Topic;
 
         History = client.getHistoryList();
+        Clock clock = new Clock();
 
         setLayout(new BorderLayout());
         JList<String> msgList = new JList<>(History);
@@ -29,6 +30,8 @@ public class TopicMsgPane extends JPanel implements TopicMessageListener {
             public void actionPerformed(ActionEvent e) {
                 client.clearHistoryList();
                 setVisible(false);
+                revalidate();
+
             }
         });
 
@@ -45,7 +48,7 @@ public class TopicMsgPane extends JPanel implements TopicMessageListener {
                     temp[2] = text;
                     if (!(text.equals(""))){
                         client.SendTopicMsg(temp);
-                        History.addElement("You: "+text);
+                        History.addElement("You("+clock.tick()+"): "+text);
                     }
                     input.setText("");
                 } catch (IOException exception) {
@@ -57,8 +60,8 @@ public class TopicMsgPane extends JPanel implements TopicMessageListener {
     }
 
     @Override
-    public void OnMessage(String fromLogin, String msgBody) {
-            String line = fromLogin + ": " + msgBody;
+    public void OnMessage(String fromLogin, String time, String msgBody) {
+            String line = fromLogin +"("+time+"): " + msgBody;
             History.addElement(line);
     }
 }

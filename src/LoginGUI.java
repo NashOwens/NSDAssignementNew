@@ -35,8 +35,6 @@ public class LoginGUI extends JFrame {
     }
 
     private void Exit() {
-        String login = loginField.getText();
-        String pass = passField.getText();
         try {
             client.handleLogOff();
             System.exit(0);

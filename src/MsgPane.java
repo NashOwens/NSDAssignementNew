@@ -10,6 +10,8 @@ public class MsgPane extends JPanel implements MessageListener {
     private final Client client;
     private final String login;
 
+    private final Clock clock = new Clock();
+
     private ArrayList<String[]> History;
     private DefaultListModel<String> listModel = new DefaultListModel<>();
     private JList<String> msgList = new JList<>(listModel);
@@ -36,7 +38,8 @@ public class MsgPane extends JPanel implements MessageListener {
                     String text = input.getText();
                     if (!(text.equals(""))){
                         client.msg(Topic, text);
-                        listModel.addElement("You: "+text);
+                        String msg = "You ("+clock.tick()+"): "+text;
+                        listModel.addElement(msg);
                     }
                     input.setText("");
                 } catch (IOException exception) {
@@ -47,9 +50,9 @@ public class MsgPane extends JPanel implements MessageListener {
     }
 
     @Override
-    public void onMessage(String fromLogin, String msgBody) {
+    public void onMessage(String fromLogin, String Time, String msgBody) {
         if (login.equalsIgnoreCase(fromLogin)){
-            String line = fromLogin +": " + msgBody;
+            String line = fromLogin +" ("+Time+")"+": " + msgBody;
             listModel.addElement(line);
         }
     }

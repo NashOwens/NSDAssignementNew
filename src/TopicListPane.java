@@ -7,18 +7,22 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class TopicListPane extends JPanel {
+public class TopicListPane extends JPanel implements TopicListener {
 
     private final Client client;
     private JList<String> TopicListUI;
+    private DefaultListModel<String> topicListModel;
+    private JTextField Title = new JTextField("Topics/Chatroom's:");
 
     public TopicListPane(Client client) {
         this.client = client;
-        DefaultListModel<String> topicListModel = client.getTopicList();
+        topicListModel = client.getTopicList();
 
         TopicListUI = new JList<>(topicListModel);
         setLayout(new BorderLayout());
         setSize(200,300);
+        Title.setEditable(false);
+        add(Title, BorderLayout.NORTH);
         add(new JScrollPane(TopicListUI), BorderLayout.CENTER);
 
         TopicListUI.addMouseListener(new MouseAdapter() {
@@ -47,5 +51,10 @@ public class TopicListPane extends JPanel {
             }
         });
         setVisible(true);
+    }
+
+    @Override
+    public void OnTopic(String topic) {
+        topicListModel.addElement(topic);
     }
 }

@@ -1,3 +1,4 @@
+import java.time.LocalDate;
 
 public class Clock {
 
@@ -9,6 +10,7 @@ public class Clock {
                 int hour = java.time.LocalTime.now().getHour();
                 int mins = java.time.LocalTime.now().getMinute();
                 int seconds = java.time.LocalTime.now().getSecond();
-                return hour + ":" + mins + ":" + seconds;
+                int day = LocalDate.now().getDayOfYear();
+                return hour + ":" + mins + ":" + seconds + "// " +day;
         }
 }

@@ -16,7 +16,7 @@ public class Client extends JPanel {
 
     private ArrayList<UserStatusListener> userStatusListeners = new ArrayList<>();
     private ArrayList<MessageListener> messageListeners = new ArrayList<>();
-    private ArrayList<TopicMessageListener> topicListener = new ArrayList<>();
+    private ArrayList<TopicMessageListener> topicMsgListener = new ArrayList<>();
 
     private DefaultListModel<String> userList = new DefaultListModel<>();
     private DefaultListModel<String> TopicList = new DefaultListModel<>();
@@ -49,7 +49,7 @@ public class Client extends JPanel {
                 }
         });
 
-        this.addMessageListener((fromLogin, msgBody) ->
+        this.addMessageListener((fromLogin, Time, msgBody) ->
                 userLog.append("\nyou have a message from "+fromLogin+" at "+java.time.LocalDate.now()+
                         java.time.LocalTime.now()));
 
@@ -110,7 +110,7 @@ public class Client extends JPanel {
                     } else if("Offline".equalsIgnoreCase(cmd)){
                         handleOffline(tokens);
                     } else if("msg".equalsIgnoreCase(cmd)){
-                        String[] tokensMsg = line.split(" ",3);
+                        String[] tokensMsg = line.split(" ",4);
                         handleMsg(tokensMsg);
                     } else if("logoff".equalsIgnoreCase(cmd)){
                         handleLogOff();
@@ -118,10 +118,10 @@ public class Client extends JPanel {
                         String[] tokensMsg = line.split(" ",2);
                         setTopics(tokensMsg);
                     } else if("getTopicHistory".equalsIgnoreCase(cmd)){
-                        String[] tokensMsg = line.split(" ", 3);
+                        String[] tokensMsg = line.split(" ", 4);
                         setTopicHistory(tokensMsg);
                     } else if("msgTopic".equalsIgnoreCase(cmd)){
-                        String[] tokensMsg = line.split(" ",3);
+                        String[] tokensMsg = line.split(" ",4);
                         handleTopicMsg(tokensMsg);
                     }
                 }
@@ -139,11 +139,12 @@ public class Client extends JPanel {
 
     private void handleTopicMsg(String[] tokensMsg) {
         String login = tokensMsg[1];
-        String msgBody = tokensMsg[2];
+        String time = tokensMsg[2];
+        String msgBody = tokensMsg[3];
 
-        for (TopicMessageListener listener : topicListener){
+        for (TopicMessageListener listener : topicMsgListener){
             if(!(Username.equals(login))) {
-                listener.OnMessage(login, msgBody);
+                listener.OnMessage(login, time, msgBody);
             }
         }
     }
@@ -154,7 +155,7 @@ public class Client extends JPanel {
     }
 
     private void setTopicHistory(String[] tokensMsg) {
-        String post = tokensMsg[1] + ": "+tokensMsg[2];
+        String post = tokensMsg[1] +"(" +tokensMsg[2]+ "): "+tokensMsg[3];
         TopicHistory.addElement(post);
     }
 
@@ -173,10 +174,11 @@ public class Client extends JPanel {
 
     private void handleMsg(String[] tokensMsg) {
         String login = tokensMsg[1];
-        String msgBody = tokensMsg[2];
+        String time = tokensMsg[2];
+        String msgBody = tokensMsg[3];
 
         for (MessageListener listener : messageListeners){
-            listener.onMessage(login, msgBody);
+            listener.onMessage(login, time, msgBody);
         }
     }
 
@@ -198,6 +200,10 @@ public class Client extends JPanel {
     public void getTopics() throws IOException {
         String cmd ="getTopic\n";
         serverOut.write(cmd.getBytes());
+    }
+
+    public void addToTopics(String topic) {
+        TopicList.addElement(topic);
     }
 
     public DefaultListModel<String> getTopicList() {
@@ -228,8 +234,8 @@ public class Client extends JPanel {
     public void removeMessageStatusListener(MessageListener listener){
         messageListeners.remove(listener);
     }
-    public void addTopicMessageListener(TopicMessageListener listener) { topicListener.add(listener); }
-    public void removeTopicMessageListener(TopicMessageListener listener) { topicListener.remove(listener); }
+    public void addTopicMessageListener(TopicMessageListener listener) { topicMsgListener.add(listener); }
+    public void removeTopicMessageListener(TopicMessageListener listener) { topicMsgListener.remove(listener); }
 
     public DefaultListModel<String> getHistoryList() {
         return TopicHistory;
